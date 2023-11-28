@@ -2,14 +2,16 @@ build --incompatible_strict_action_env
 build --action_env=BAZEL_CXXOPTS="-std=c++17"
 build --define=TYPESENSE_VERSION=\"nightly\"
 build --cxxopt="-std=c++17"
+build --copt="-Wno-int-conversion"
+build --cxxopt="-Wno-uninitialized"
+build --cxxopt="-Wno-deprecated-copy"
+build --cxxopt="-Wno-unused-but-set-variable"
+build --cxxopt="-Wno-array-bounds"
 build --strip=never
 build --define=BRPC_WITH_GLOG=true
-build --jobs=6
 
-test --jobs=6
 test --define=BRPC_WITH_GLOG=true
 
-run --jobs=6
 run --define=BRPC_WITH_GLOG=true
 
 build --enable_platform_specific_config

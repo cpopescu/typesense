@@ -1,6 +1,6 @@
 filegroup(
     name = "all_srcs",
-    srcs = glob(["**"]),
+    srcs = glob(["**"], exclude=["winml/**"]),
     visibility = ["//visibility:public"],
 )
 
