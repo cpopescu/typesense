@@ -1,37 +1,40 @@
 #pragma once
 #include <string>
+
 #include "sparsepp.h"
 
 struct adi_node_t;
 
 class adi_tree_t {
+ private:
+  spp::sparse_hash_map<uint32_t, std::string> id_keys;
+  adi_node_t* root = nullptr;
 
-private:
+  static void add_node(adi_node_t* node, const std::string& key,
+                       size_t key_index);
 
-    spp::sparse_hash_map<uint32_t, std::string> id_keys;
-    adi_node_t* root = nullptr;
+  static bool rank_aggregate(adi_node_t* node, const std::string& key,
+                             size_t key_index, size_t& rank);
 
-    static void add_node(adi_node_t* node, const std::string& key, size_t key_index);
+  static adi_node_t* get_node(adi_node_t* node, const std::string& key,
+                              const size_t key_index,
+                              std::vector<adi_node_t*>& path);
 
-    static bool rank_aggregate(adi_node_t* node, const std::string& key, size_t key_index, size_t& rank);
+  void remove_node(adi_node_t* node, const std::string& key,
+                   const size_t key_index);
 
-    static adi_node_t* get_node(adi_node_t* node, const std::string& key, const size_t key_index,
-                                std::vector<adi_node_t*>& path);
+ public:
+  static constexpr size_t NOT_FOUND = INT64_MAX;
 
-    void remove_node(adi_node_t* node, const std::string& key, const size_t key_index);
+  adi_tree_t();
 
-public:
-    static constexpr size_t NOT_FOUND = INT64_MAX;
+  ~adi_tree_t();
 
-    adi_tree_t();
+  void index(uint32_t id, const std::string& key);
 
-    ~adi_tree_t();
+  size_t rank(uint32_t id);
 
-    void index(uint32_t id, const std::string& key);
+  void remove(uint32_t id);
 
-    size_t rank(uint32_t id);
-
-    void remove(uint32_t id);
-
-    const adi_node_t* get_root();
+  const adi_node_t* get_root();
 };

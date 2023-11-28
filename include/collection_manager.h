@@ -1,204 +1,210 @@
 #pragma once
 
+#include <sparsepp.h>
+
 #include <iostream>
 #include <string>
-#include <sparsepp.h>
-#include "store.h"
-#include "field.h"
-#include "collection.h"
+
 #include "auth_manager.h"
-#include "threadpool.h"
 #include "batched_indexer.h"
+#include "collection.h"
+#include "field.h"
+#include "store.h"
+#include "threadpool.h"
 
-template<typename ResourceType>
+template <typename ResourceType>
 struct locked_resource_view_t {
-    locked_resource_view_t(std::shared_mutex &mutex, ResourceType &resource) : _lock(mutex), _resource(&resource) {}
+  locked_resource_view_t(std::shared_mutex& mutex, ResourceType& resource)
+      : _lock(mutex), _resource(&resource) {}
 
-    locked_resource_view_t(std::shared_mutex &mutex, ResourceType *resource) : _lock(mutex), _resource(resource) {}
+  locked_resource_view_t(std::shared_mutex& mutex, ResourceType* resource)
+      : _lock(mutex), _resource(resource) {}
 
-    locked_resource_view_t(ResourceType &&) = delete;
+  locked_resource_view_t(ResourceType&&) = delete;
 
-    locked_resource_view_t(const ResourceType &) = delete;
+  locked_resource_view_t(const ResourceType&) = delete;
 
-    locked_resource_view_t &operator=(const ResourceType &) = delete;
+  locked_resource_view_t& operator=(const ResourceType&) = delete;
 
-    ResourceType* operator->() {
-        return _resource;
-    }
+  ResourceType* operator->() { return _resource; }
 
-    bool operator==(const ResourceType* other) {
-        return other == _resource;
-    }
+  bool operator==(const ResourceType* other) { return other == _resource; }
 
-    bool operator!=(const ResourceType* other) {
-        return other != _resource;
-    }
+  bool operator!=(const ResourceType* other) { return other != _resource; }
 
-    void unlock() {
-        _lock.unlock();
-    }
+  void unlock() { _lock.unlock(); }
 
-    ResourceType* get() {
-        return _resource;
-    }
+  ResourceType* get() { return _resource; }
 
-private:
-    std::shared_lock<std::shared_mutex> _lock;
-    ResourceType* _resource;
+ private:
+  std::shared_lock<std::shared_mutex> _lock;
+  ResourceType* _resource;
 };
-
 
 // Singleton, for managing meta information of all collections and house keeping
 class CollectionManager {
-private:
-    mutable std::shared_mutex mutex;
+ private:
+  mutable std::shared_mutex mutex;
 
-    mutable std::mutex coll_create_mutex;
+  mutable std::mutex coll_create_mutex;
 
-    Store *store;
-    ThreadPool* thread_pool;
+  Store* store;
+  ThreadPool* thread_pool;
 
-    AuthManager auth_manager;
+  AuthManager auth_manager;
 
-    spp::sparse_hash_map<std::string, Collection*> collections;
+  spp::sparse_hash_map<std::string, Collection*> collections;
 
-    spp::sparse_hash_map<uint32_t, std::string> collection_id_names;
+  spp::sparse_hash_map<uint32_t, std::string> collection_id_names;
 
-    spp::sparse_hash_map<std::string, std::string> collection_symlinks;
+  spp::sparse_hash_map<std::string, std::string> collection_symlinks;
 
-    spp::sparse_hash_map<std::string, nlohmann::json> preset_configs;
+  spp::sparse_hash_map<std::string, nlohmann::json> preset_configs;
 
-    // Auto incrementing ID assigned to each collection
-    // Using a ID instead of a collection's name makes renaming possible
-    std::atomic<uint32_t> next_collection_id;
+  // Auto incrementing ID assigned to each collection
+  // Using a ID instead of a collection's name makes renaming possible
+  std::atomic<uint32_t> next_collection_id;
 
-    std::string bootstrap_auth_key;
+  std::string bootstrap_auth_key;
 
-    std::atomic<float> max_memory_ratio;
+  std::atomic<float> max_memory_ratio;
 
-    std::atomic<bool>* quit;
+  std::atomic<bool>* quit;
 
-    BatchedIndexer* batch_indexer;
+  BatchedIndexer* batch_indexer;
 
-    CollectionManager();
+  CollectionManager();
 
-    ~CollectionManager() = default;
+  ~CollectionManager() = default;
 
-    static Option<std::string> get_first_index_error(const std::vector<index_record>& index_records) {
-        for(const auto & index_record: index_records) {
-            if(!index_record.indexed.ok()) {
-                return Option<std::string>(index_record.indexed.error());
-            }
-        }
-
-        return Option<std::string>(404, "Not found");
+  static Option<std::string> get_first_index_error(
+      const std::vector<index_record>& index_records) {
+    for (const auto& index_record : index_records) {
+      if (!index_record.indexed.ok()) {
+        return Option<std::string>(index_record.indexed.error());
+      }
     }
 
-public:
-    static constexpr const size_t DEFAULT_NUM_MEMORY_SHARDS = 4;
+    return Option<std::string>(404, "Not found");
+  }
 
-    static constexpr const char* NEXT_COLLECTION_ID_KEY = "$CI";
-    static constexpr const char* SYMLINK_PREFIX = "$SL";
-    static constexpr const char* PRESET_PREFIX = "$PS";
-    static constexpr const char* BATCHED_INDEXER_STATE_KEY = "$BI";
+ public:
+  static constexpr const size_t DEFAULT_NUM_MEMORY_SHARDS = 4;
 
-    static CollectionManager & get_instance() {
-        static CollectionManager instance;
-        return instance;
-    }
+  static constexpr const char* NEXT_COLLECTION_ID_KEY = "$CI";
+  static constexpr const char* SYMLINK_PREFIX = "$SL";
+  static constexpr const char* PRESET_PREFIX = "$PS";
+  static constexpr const char* BATCHED_INDEXER_STATE_KEY = "$BI";
 
-    CollectionManager(CollectionManager const&) = delete;
-    void operator=(CollectionManager const&) = delete;
+  static CollectionManager& get_instance() {
+    static CollectionManager instance;
+    return instance;
+  }
 
-    static Collection* init_collection(const nlohmann::json & collection_meta,
-                                       const uint32_t collection_next_seq_id,
-                                       Store* store,
-                                       float max_memory_ratio);
+  CollectionManager(CollectionManager const&) = delete;
+  void operator=(CollectionManager const&) = delete;
 
-    static Option<bool> load_collection(const nlohmann::json& collection_meta,
-                                        const size_t batch_size,
-                                        const StoreStatus& next_coll_id_status,
-                                        const std::atomic<bool>& quit);
+  static Collection* init_collection(const nlohmann::json& collection_meta,
+                                     const uint32_t collection_next_seq_id,
+                                     Store* store, float max_memory_ratio);
 
-    Option<Collection*> clone_collection(const std::string& existing_name, const nlohmann::json& req_json);
+  static Option<bool> load_collection(const nlohmann::json& collection_meta,
+                                      const size_t batch_size,
+                                      const StoreStatus& next_coll_id_status,
+                                      const std::atomic<bool>& quit);
 
-    void add_to_collections(Collection* collection);
+  Option<Collection*> clone_collection(const std::string& existing_name,
+                                       const nlohmann::json& req_json);
 
-    std::vector<Collection*> get_collections() const;
+  void add_to_collections(Collection* collection);
 
-    Collection* get_collection_unsafe(const std::string & collection_name) const;
+  std::vector<Collection*> get_collections() const;
 
-    // PUBLICLY EXPOSED API
+  Collection* get_collection_unsafe(const std::string& collection_name) const;
 
-    void init(Store *store, ThreadPool* thread_pool, const float max_memory_ratio,
-              const std::string & auth_key, std::atomic<bool>& quit, BatchedIndexer* batch_indexer);
+  // PUBLICLY EXPOSED API
 
-    // only for tests!
-    void init(Store *store, const float max_memory_ratio, const std::string & auth_key, std::atomic<bool>& exit);
+  void init(Store* store, ThreadPool* thread_pool, const float max_memory_ratio,
+            const std::string& auth_key, std::atomic<bool>& quit,
+            BatchedIndexer* batch_indexer);
 
-    Option<bool> load(const size_t collection_batch_size, const size_t document_batch_size);
+  // only for tests!
+  void init(Store* store, const float max_memory_ratio,
+            const std::string& auth_key, std::atomic<bool>& exit);
 
-    // frees in-memory data structures when server is shutdown - helps us run a memory leak detector properly
-    void dispose();
+  Option<bool> load(const size_t collection_batch_size,
+                    const size_t document_batch_size);
 
-    bool auth_key_matches(const string& req_auth_key, const string& action,
-                          const std::vector<collection_key_t>& collection_keys,
-                          std::map<std::string, std::string>& params,
-                          std::vector<nlohmann::json>& embedded_params_vec) const;
+  // frees in-memory data structures when server is shutdown - helps us run a
+  // memory leak detector properly
+  void dispose();
 
-    static Option<Collection*> create_collection(nlohmann::json& req_json);
+  bool auth_key_matches(const string& req_auth_key, const string& action,
+                        const std::vector<collection_key_t>& collection_keys,
+                        std::map<std::string, std::string>& params,
+                        std::vector<nlohmann::json>& embedded_params_vec) const;
 
-    Option<Collection*> create_collection(const std::string& name, const size_t num_memory_shards,
-                                          const std::vector<field> & fields,
-                                          const std::string & default_sorting_field="",
-                                          const uint64_t created_at = static_cast<uint64_t>(std::time(nullptr)),
-                                          const std::string& fallback_field_type = "",
-                                          const std::vector<std::string>& symbols_to_index = {},
-                                          const std::vector<std::string>& token_separators = {},
-                                          const bool enable_nested_fields = false);
+  static Option<Collection*> create_collection(nlohmann::json& req_json);
 
-    locked_resource_view_t<Collection> get_collection(const std::string & collection_name) const;
+  Option<Collection*> create_collection(
+      const std::string& name, const size_t num_memory_shards,
+      const std::vector<field>& fields,
+      const std::string& default_sorting_field = "",
+      const uint64_t created_at = static_cast<uint64_t>(std::time(nullptr)),
+      const std::string& fallback_field_type = "",
+      const std::vector<std::string>& symbols_to_index = {},
+      const std::vector<std::string>& token_separators = {},
+      const bool enable_nested_fields = false);
 
-    locked_resource_view_t<Collection> get_collection_with_id(uint32_t collection_id) const;
+  locked_resource_view_t<Collection> get_collection(
+      const std::string& collection_name) const;
 
-    nlohmann::json get_collection_summaries() const;
+  locked_resource_view_t<Collection> get_collection_with_id(
+      uint32_t collection_id) const;
 
-    Option<nlohmann::json> drop_collection(const std::string& collection_name, const bool remove_from_store = true);
+  nlohmann::json get_collection_summaries() const;
 
-    uint32_t get_next_collection_id() const;
+  Option<nlohmann::json> drop_collection(const std::string& collection_name,
+                                         const bool remove_from_store = true);
 
-    static std::string get_symlink_key(const std::string & symlink_name);
+  uint32_t get_next_collection_id() const;
 
-    static std::string get_preset_key(const std::string & preset_name);
+  static std::string get_symlink_key(const std::string& symlink_name);
 
-    Store* get_store();
+  static std::string get_preset_key(const std::string& preset_name);
 
-    ThreadPool* get_thread_pool() const;
+  Store* get_store();
 
-    AuthManager& getAuthManager();
+  ThreadPool* get_thread_pool() const;
 
-    static Option<bool> do_search(std::map<std::string, std::string>& req_params,
-                                  nlohmann::json& embedded_params,
-                                  std::string& results_json_str,
-                                  uint64_t start_ts);
+  AuthManager& getAuthManager();
 
-    static bool parse_sort_by_str(std::string sort_by_str, std::vector<sort_by>& sort_fields);
+  static Option<bool> do_search(std::map<std::string, std::string>& req_params,
+                                nlohmann::json& embedded_params,
+                                std::string& results_json_str,
+                                uint64_t start_ts);
 
-    // symlinks
-    Option<std::string> resolve_symlink(const std::string & symlink_name) const;
+  static bool parse_sort_by_str(std::string sort_by_str,
+                                std::vector<sort_by>& sort_fields);
 
-    spp::sparse_hash_map<std::string, std::string> get_symlinks() const;
+  // symlinks
+  Option<std::string> resolve_symlink(const std::string& symlink_name) const;
 
-    Option<bool> upsert_symlink(const std::string & symlink_name, const std::string & collection_name);
+  spp::sparse_hash_map<std::string, std::string> get_symlinks() const;
 
-    Option<bool> delete_symlink(const std::string & symlink_name);
+  Option<bool> upsert_symlink(const std::string& symlink_name,
+                              const std::string& collection_name);
 
-    // presets
-    spp::sparse_hash_map<std::string, nlohmann::json> get_presets() const;
+  Option<bool> delete_symlink(const std::string& symlink_name);
 
-    Option<bool> get_preset(const std::string & preset_name, nlohmann::json& preset) const;
+  // presets
+  spp::sparse_hash_map<std::string, nlohmann::json> get_presets() const;
 
-    Option<bool> upsert_preset(const std::string & preset_name, const nlohmann::json& preset_config);
+  Option<bool> get_preset(const std::string& preset_name,
+                          nlohmann::json& preset) const;
 
-    Option<bool> delete_preset(const std::string & preset_name);
+  Option<bool> upsert_preset(const std::string& preset_name,
+                             const nlohmann::json& preset_config);
+
+  Option<bool> delete_preset(const std::string& preset_name);
 };

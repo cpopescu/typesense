@@ -1,26 +1,26 @@
 #pragma once
 
-#include <string>
 #include <mutex>
+#include <string>
 
 class JapaneseLocalizer {
-private:
-    JapaneseLocalizer();
+ private:
+  JapaneseLocalizer();
 
-    ~JapaneseLocalizer() = default;
+  ~JapaneseLocalizer() = default;
 
-    static void write_data_file(const std::string& base64_data, const std::string& file_name);
+  static void write_data_file(const std::string& base64_data,
+                              const std::string& file_name);
 
-    std::mutex m;
+  std::mutex m;
 
-public:
+ public:
+  static JapaneseLocalizer& get_instance() {
+    static JapaneseLocalizer instance;
+    return instance;
+  }
 
-    static JapaneseLocalizer & get_instance() {
-        static JapaneseLocalizer instance;
-        return instance;
-    }
+  bool init();
 
-    bool init();
-
-    char* normalize(const std::string& text);
+  char* normalize(const std::string& text);
 };

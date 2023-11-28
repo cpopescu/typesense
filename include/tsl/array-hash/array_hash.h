@@ -631,9 +631,9 @@ class array_bucket {
    *
    * Start search from buffer_ptr_in_out.
    */
-  bool find_or_end_of_bucket_impl(const CharT* key, size_type key_size,
-                                  const CharT*& buffer_ptr_in_out) const
-      noexcept {
+  bool find_or_end_of_bucket_impl(
+      const CharT* key, size_type key_size,
+      const CharT*& buffer_ptr_in_out) const noexcept {
     while (!is_end_of_bucket(buffer_ptr_in_out)) {
       const key_size_type buffer_key_size = read_key_size(buffer_ptr_in_out);
       const CharT* buffer_str =
@@ -961,11 +961,10 @@ class array_hash : private value_container<T>,
         m_load_threshold(other.m_load_threshold) {}
 
   array_hash(array_hash&& other) noexcept(
-      std::is_nothrow_move_constructible<value_container<T>>::value&&
-          std::is_nothrow_move_constructible<Hash>::value&&
-              std::is_nothrow_move_constructible<GrowthPolicy>::value&&
-                  std::is_nothrow_move_constructible<
-                      std::vector<array_bucket>>::value)
+      std::is_nothrow_move_constructible<value_container<T>>::value &&
+      std::is_nothrow_move_constructible<Hash>::value &&
+      std::is_nothrow_move_constructible<GrowthPolicy>::value &&
+      std::is_nothrow_move_constructible<std::vector<array_bucket>>::value)
       : value_container<T>(std::move(other)),
         Hash(std::move(other)),
         GrowthPolicy(std::move(other)),

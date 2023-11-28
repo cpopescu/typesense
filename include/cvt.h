@@ -56,54 +56,52 @@
 
 */
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
+
 #include "logger.h"
 
 struct cvt_leaf_t {
-    size_t value;
+  size_t value;
 };
 
 enum CVT_NODE {
-    INTERNAL = 0,
-    LEAF = 1,
-    COMPRESSED = 2,
+  INTERNAL = 0,
+  LEAF = 1,
+  COMPRESSED = 2,
 };
 
 class CVTrie {
-private:
-    size_t size;
-    uint8_t* root;
+ private:
+  size_t size;
+  uint8_t* root;
 
-    const uintptr_t PTR_MASK = ~(1ULL << 48ULL);
+  const uintptr_t PTR_MASK = ~(1ULL << 48ULL);
 
-public:
+ public:
+  CVTrie() : root(nullptr) {}
 
-    CVTrie(): root(nullptr) {
+  inline void* get_ptr(const void* tagged_ptr) {
+    // Right shift of signed integer for sign extension is
+    // implementation-defined but works on major compilers
+    return (void*)(((intptr_t)((uintptr_t)tagged_ptr << 16ULL) >> 16ULL) & ~3);
+  }
 
-    }
+  inline void* tag_ptr(const void* ptr, const uint16_t offset,
+                       const CVT_NODE node_type) {
+    return (void*)(((uintptr_t)ptr & PTR_MASK) | (uint64_t(offset) << 48ULL) |
+                   uint64_t(node_type));
+  }
 
-    inline void* get_ptr(const void* tagged_ptr) {
-        // Right shift of signed integer for sign extension is implementation-defined but works on major compilers
-        return (void*)( ((intptr_t)((uintptr_t)tagged_ptr << 16ULL) >> 16ULL) & ~3 );
-    }
+  inline uint8_t get_node_type(const void* tagged_ptr) {
+    return (uintptr_t)(tagged_ptr) & 3;
+  }
 
-    inline void* tag_ptr(const void* ptr, const uint16_t offset, const CVT_NODE node_type) {
-        return (void*)(((uintptr_t)ptr & PTR_MASK) | (uint64_t(offset) << 48ULL) | uint64_t(node_type));
-    }
+  inline uint16_t get_offset(const void* ptr) {
+    return (uintptr_t)(ptr) >> 48ULL;
+  }
 
-    inline uint8_t get_node_type(const void* tagged_ptr) {
-        return (uintptr_t)(tagged_ptr) & 3;
-    }
+  void* find(const char* key, const uint8_t length);
 
-    inline uint16_t get_offset(const void* ptr) {
-        return (uintptr_t)(ptr) >> 48ULL;
-    }
-
-    void* find(const char* key, const uint8_t length);
-
-    bool add(const char* key, const uint8_t length, void* value);
-
+  bool add(const char* key, const uint8_t length, void* value);
 };
-
-

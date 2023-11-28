@@ -11,7 +11,8 @@ struct number_t {
 
     }
 
-    explicit number_t(float val): is_float(true), intval(*reinterpret_cast<int64_t*>(&val)) {
+    explicit number_t(float val): is_float(true),
+intval(*reinterpret_cast<int64_t*>(&val)) {
 
     }
 
@@ -33,28 +34,32 @@ struct number_t {
 
     inline bool operator == (const number_t & rhs) const  {
         if(is_float) {
-            return (*reinterpret_cast<const float*>(&intval)) == (*reinterpret_cast<const float*>(&rhs.intval));
+            return (*reinterpret_cast<const float*>(&intval)) ==
+(*reinterpret_cast<const float*>(&rhs.intval));
         }
         return intval == rhs.intval;
     }
 
     inline bool operator < (const number_t & rhs) const  {
         if(is_float) {
-            return (*reinterpret_cast<const float*>(&intval)) < (*reinterpret_cast<const float*>(&rhs.intval));
+            return (*reinterpret_cast<const float*>(&intval)) <
+(*reinterpret_cast<const float*>(&rhs.intval));
         }
         return intval < rhs.intval;
     }
 
     inline bool operator > (const number_t & rhs) const {
         if(is_float) {
-            return (*reinterpret_cast<const float*>(&intval)) > (*reinterpret_cast<const float*>(&rhs.intval));
+            return (*reinterpret_cast<const float*>(&intval)) >
+(*reinterpret_cast<const float*>(&rhs.intval));
         }
         return intval > rhs.intval;
     }
 
     inline number_t operator * (const number_t & rhs) const {
         if(is_float) {
-            return number_t((*reinterpret_cast<const float*>(&intval)) * (*reinterpret_cast<const float*>(&rhs.intval)));
+            return number_t((*reinterpret_cast<const float*>(&intval)) *
+(*reinterpret_cast<const float*>(&rhs.intval)));
         }
         return number_t(intval * rhs.intval);
     }

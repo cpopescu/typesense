@@ -1,51 +1,53 @@
 #pragma once
 
+#include <tsl/htrie_map.h>
+
+#include <atomic>
+#include <json.hpp>
+#include <shared_mutex>
 #include <string>
 #include <vector>
-#include <tsl/htrie_map.h>
-#include <json.hpp>
-#include <atomic>
-#include <shared_mutex>
 
 class PopularQueries {
-public:
-    struct QWithTimestamp {
-        std::string query;
-        uint64_t timestamp;
+ public:
+  struct QWithTimestamp {
+    std::string query;
+    uint64_t timestamp;
 
-        QWithTimestamp(const std::string& query, uint64_t timestamp) : query(query), timestamp(timestamp) {}
-    };
+    QWithTimestamp(const std::string& query, uint64_t timestamp)
+        : query(query), timestamp(timestamp) {}
+  };
 
-    static const size_t QUERY_FINALIZATION_INTERVAL_MICROS = 4 * 1000 * 1000;
+  static const size_t QUERY_FINALIZATION_INTERVAL_MICROS = 4 * 1000 * 1000;
 
-private:
+ private:
+  size_t k;
+  const size_t max_size;
 
-    size_t k;
-    const size_t max_size;
+  // counts aggregated within the current node
+  tsl::htrie_map<char, uint32_t> local_counts;
+  std::shared_mutex lmutex;
 
-    // counts aggregated within the current node
-    tsl::htrie_map<char, uint32_t> local_counts;
-    std::shared_mutex lmutex;
+  std::unordered_map<std::string, std::vector<QWithTimestamp>>
+      user_prefix_queries;
+  std::shared_mutex umutex;
 
-    std::unordered_map<std::string, std::vector<QWithTimestamp>> user_prefix_queries;
-    std::shared_mutex umutex;
+ public:
+  PopularQueries(size_t k);
 
-public:
+  void add(const std::string& value, const bool live_query,
+           const std::string& user_id, uint64_t now_ts_us = 0);
 
-    PopularQueries(size_t k);
+  void compact_user_queries(uint64_t now_ts_us);
 
-    void add(const std::string& value, const bool live_query, const std::string& user_id,
-             uint64_t now_ts_us = 0);
+  void serialize_as_docs(std::string& docs);
 
-    void compact_user_queries(uint64_t now_ts_us);
+  void reset_local_counts();
 
-    void serialize_as_docs(std::string& docs);
+  size_t get_k();
 
-    void reset_local_counts();
+  std::unordered_map<std::string, std::vector<QWithTimestamp>>
+  get_user_prefix_queries();
 
-    size_t get_k();
-
-    std::unordered_map<std::string, std::vector<QWithTimestamp>> get_user_prefix_queries();
-
-    tsl::htrie_map<char, uint32_t> get_local_counts();
+  tsl::htrie_map<char, uint32_t> get_local_counts();
 };

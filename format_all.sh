@@ -2,6 +2,8 @@
 
 # Formats all source files in place
 for ext in h cc proto; do
-    find shapley/ -name "*.${ext}" | xargs clang-format --style=Google -i
+    for dir in include src test; do
+      find ${dir} -name "*.${ext}" | xargs clang-format --style=Google -i
+    done
 done
-buildifier -r shapley/
+buildifier -r .

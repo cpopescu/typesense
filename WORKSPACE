@@ -1,6 +1,5 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
-
 load("//bazel:onnxruntime_cuda_defs.bzl", "cuda_home_repository")
 
 cuda_home_repository(name = "cuda_home_repo")
@@ -28,8 +27,9 @@ load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_depende
 # This sets up some common toolchains for building targets. For more details, please see
 # https://bazelbuild.github.io/rules_foreign_cc/0.9.0/flatten.html#rules_foreign_cc_dependencies
 rules_foreign_cc_dependencies(
-    cmake_version="3.25.0",
-    ninja_version="1.11.1")
+    cmake_version = "3.25.0",
+    ninja_version = "1.11.1",
+)
 
 # brpc and its dependencies
 git_repository(
@@ -41,22 +41,21 @@ git_repository(
     remote = "https://github.com/apache/brpc.git",
 )
 
-
 new_git_repository(
-    name="onnx_runtime",
-    branch= "rel-1.14.1",
+    name = "onnx_runtime",
+    branch = "rel-1.14.1",
     build_file = "//bazel:onnxruntime.BUILD",
-    remote= "https://github.com/microsoft/onnxruntime",
-    patches=["//bazel:onnx.patch"],
-    patch_cmds= ["git submodule sync && git submodule foreach  'git fetch --tags' && git submodule update --init --remote"]
+    patch_cmds = ["git submodule sync && git submodule foreach  'git fetch --tags' && git submodule update --init --remote"],
+    patches = ["//bazel:onnx.patch"],
+    remote = "https://github.com/microsoft/onnxruntime",
 )
 
 new_git_repository(
     name = "onnx_runtime_extensions",
     build_file = "//bazel:onnxruntime_extensions.BUILD",
-    remote = "https://github.com/microsoft/onnxruntime-extensions",
     commit = "81e7799c69044c745239202085eb0a98f102937b",
-    patches=["//bazel:onnx_ext.patch"],
+    patches = ["//bazel:onnx_ext.patch"],
+    remote = "https://github.com/microsoft/onnxruntime-extensions",
 )
 
 new_git_repository(
@@ -76,21 +75,22 @@ new_git_repository(
 new_git_repository(
     name = "sentencepiece",
     build_file = "//bazel:sentencepiece.BUILD",
-    tag = "v0.1.98",
-    remote = "https://github.com/google/sentencepiece",
+    patch_args = ["-p1"],
     patches = ["//bazel:sentencepiece.patch"],
-    patch_args = ["-p1"]
+    remote = "https://github.com/google/sentencepiece",
+    tag = "v0.1.98",
 )
 
 git_repository(
     name = "rules_perl",
-    remote = "https://github.com/bazelbuild/rules_perl.git",
     commit = "7f10dada09fcba1dc79a6a91da2facc25e72bd7d",
+    remote = "https://github.com/bazelbuild/rules_perl.git",
 )
 
 load("@rules_perl//perl:deps.bzl", "perl_register_toolchains", "perl_rules_dependencies")
 
 perl_rules_dependencies()
+
 perl_register_toolchains()
 
 git_repository(
@@ -297,10 +297,10 @@ http_archive(
 )
 
 http_file(
-  name = "token_offsets",
-  downloaded_file_path = "token_offsets.txt",
-  sha256 = "55c1c510ca6335c049f5696f3b94ac7be61e84f3e27cd8169021929b3db99651",
-  urls = ["https://gist.githubusercontent.com/kishorenc/1d330714eb07019f210f16ccb3991217/raw/bd52e05375d305d5aaa7ac06219af999726933a4/token_offsets.log"],
+    name = "token_offsets",
+    downloaded_file_path = "token_offsets.txt",
+    sha256 = "55c1c510ca6335c049f5696f3b94ac7be61e84f3e27cd8169021929b3db99651",
+    urls = ["https://gist.githubusercontent.com/kishorenc/1d330714eb07019f210f16ccb3991217/raw/bd52e05375d305d5aaa7ac06219af999726933a4/token_offsets.log"],
 )
 
 http_archive(

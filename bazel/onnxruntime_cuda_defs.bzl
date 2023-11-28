@@ -4,6 +4,6 @@ def cuda_impl(repository_ctx):
     repository_ctx.file("BUILD", "exports_files([\"cuda_home.bzl\", \"cudnn_home.bzl\"])")
 
 cuda_home_repository = repository_rule(
-    implementation=cuda_impl,
+    implementation = cuda_impl,
     environ = ["CUDA_HOME", "CUDNN_HOME"],
 )

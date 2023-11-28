@@ -1,56 +1,57 @@
 #pragma once
-#include <string>
 #include <json.hpp>
+#include <string>
+
 #include "option.h"
 
 struct override_t {
-    static const std::string MATCH_EXACT;
-    static const std::string MATCH_CONTAINS;
+  static const std::string MATCH_EXACT;
+  static const std::string MATCH_CONTAINS;
 
-    struct rule_t {
-        std::string query;
-        std::string normalized_query;       // not actually stored, used for lowercasing etc.
-        std::string match;
-        bool dynamic_query = false;
-        std::string filter_by;
-    };
-
-    struct add_hit_t {
-        std::string doc_id;
-        uint32_t position = 0;
-    };
-
-    struct drop_hit_t {
-        std::string doc_id;
-    };
-
-    std::string id;
-
-    rule_t rule;
-    std::vector<add_hit_t> add_hits;
-    std::vector<drop_hit_t> drop_hits;
-
+  struct rule_t {
+    std::string query;
+    std::string
+        normalized_query;  // not actually stored, used for lowercasing etc.
+    std::string match;
+    bool dynamic_query = false;
     std::string filter_by;
-    bool remove_matched_tokens = false;
-    bool filter_curated_hits = false;
+  };
 
-    bool stop_processing = true;
+  struct add_hit_t {
+    std::string doc_id;
+    uint32_t position = 0;
+  };
 
-    std::string sort_by;
-    std::string replace_query;
+  struct drop_hit_t {
+    std::string doc_id;
+  };
 
-    // epoch seconds
-    int64_t effective_from_ts = -1;
-    int64_t effective_to_ts = -1;
+  std::string id;
 
-    override_t() = default;
+  rule_t rule;
+  std::vector<add_hit_t> add_hits;
+  std::vector<drop_hit_t> drop_hits;
 
-    static Option<bool> parse(const nlohmann::json& override_json, const std::string& id,
-                              override_t& override,
-                              const std::string& locale = "",
-                              const std::vector<char>& symbols_to_index = {},
-                              const std::vector<char>& token_separators = {}
-                              );
+  std::string filter_by;
+  bool remove_matched_tokens = false;
+  bool filter_curated_hits = false;
 
-    nlohmann::json to_json() const;
+  bool stop_processing = true;
+
+  std::string sort_by;
+  std::string replace_query;
+
+  // epoch seconds
+  int64_t effective_from_ts = -1;
+  int64_t effective_to_ts = -1;
+
+  override_t() = default;
+
+  static Option<bool> parse(const nlohmann::json& override_json,
+                            const std::string& id, override_t& override,
+                            const std::string& locale = "",
+                            const std::vector<char>& symbols_to_index = {},
+                            const std::vector<char>& token_separators = {});
+
+  nlohmann::json to_json() const;
 };
