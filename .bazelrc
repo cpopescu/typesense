@@ -1,3 +1,11 @@
+startup --batch_cpu_scheduling --io_nice_level 7
+build --jobs HOST_CPUS --local_ram_resources=HOST_RAM*0.5
+
+build --enable_platform_specific_config
+build:macos --apple_crosstool_top=@local_config_apple_cc//:toolchain
+build:macos --crosstool_top=@local_config_apple_cc//:toolchain
+build:macos --host_crosstool_top=@local_config_apple_cc//:toolchain
+
 build --incompatible_strict_action_env
 build --action_env=BAZEL_CXXOPTS="-std=c++17"
 build --define=TYPESENSE_VERSION=\"nightly\"
@@ -9,6 +17,8 @@ build --cxxopt="-Wno-unused-but-set-variable"
 build --cxxopt="-Wno-array-bounds"
 build --strip=never
 build --define=BRPC_WITH_GLOG=true
+build:macos --copt="-Wno-deprecated-declarations"
+build:macos --copt="-Wno-unused-but-set-variable"
 
 test --define=BRPC_WITH_GLOG=true
 

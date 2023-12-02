@@ -13,7 +13,9 @@ CMAKE_CACHE_ENTRIES = {
     "CMAKE_BUILD_TYPE": "Release",
 }
 
-CMAKE_MACOS_CACHE_ENTRIES = dict(CMAKE_CACHE_ENTRIES.items() + {}.items())
+CMAKE_MACOS_CACHE_ENTRIES = dict(CMAKE_CACHE_ENTRIES.items() + {
+    "CMAKE_CXX_FLAGS": "-Wno-uninitialized -Wno-unused-but-set-variable",
+}.items())
 
 CMAKE_LINUX_CACHE_ENTRIES = dict(CMAKE_CACHE_ENTRIES.items() + {
     "CMAKE_C_FLAGS": "-fPIC",
@@ -37,8 +39,17 @@ cmake(
         "-DWITH_TOOLS=OFF",
         "-DUSE_RTTI=1",
     ] + select({
-         "@platforms//os:macos": ["-DCMAKE_CXX_FLAGS=-Wno-uninitialized"],
-         "//conditions:default": ["-DCMAKE_CXX_FLAGS=-Wno-error=maybe-uninitialized"],
+        "@platforms//os:macos": [
+            "\"-DCMAKCE_CXX_FLAGS=-Wno-error -Wno-uninitialized -Wno-unused-but-set-variable\""],
+        "//conditions:default": ["-DCMAKE_CXX_FLAGS=-Wno-error=maybe-uninitialized"],
+    }),
+    copts = [] + select({
+        "@platforms//os:macos": [
+            "-Wno-error",
+            "-Wno-uninitialized",
+            "-Wno-unused-but-set-variable"
+        ],
+         "//conditions:default": [],
     }),
     lib_source = "//:all_srcs",
     targets = ["rocksdb"],

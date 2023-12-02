@@ -37,6 +37,7 @@ cmake(
         'CMAKE_POLICY_DEFAULT_CMP0111':'OLD'
     },
     deps = [
+        "@com_github_madler_zlib//:zlib",
         "@com_google_protobuf//:protoc",
         "@com_google_protobuf//:protobuf_lite",
         "@com_google_protobuf//:protobuf",
