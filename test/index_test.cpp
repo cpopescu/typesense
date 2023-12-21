@@ -1,7 +1,9 @@
-#include <gtest/gtest.h>
 #include "index.h"
-#include <vector>
+
+#include <gtest/gtest.h>
 #include <s2/s2loop.h>
+
+#include <vector>
 
 /*TEST(IndexTest, PointInPolygon180thMeridian) {
     // somewhere in far eastern russia
@@ -51,20 +53,20 @@
 }*/
 
 TEST(IndexTest, GeoPointPackUnpack) {
-    std::vector<std::pair<double, double>> latlngs = {
-        {43.677223,-79.630556},
-        {-0.041935, 65.433296},     // Indian Ocean Equator
-        {-66.035056, 173.187202},   // Newzealand
-        {-65.015656, -158.336234},  // Southern Ocean
-        {84.552144, -159.742483},   // Arctic Ocean
-        {84.517046, 171.730040}     // Siberian Sea
-    };
+  std::vector<std::pair<double, double>> latlngs = {
+      {43.677223, -79.630556},
+      {-0.041935, 65.433296},     // Indian Ocean Equator
+      {-66.035056, 173.187202},   // Newzealand
+      {-65.015656, -158.336234},  // Southern Ocean
+      {84.552144, -159.742483},   // Arctic Ocean
+      {84.517046, 171.730040}     // Siberian Sea
+  };
 
-    for(auto& latlng: latlngs) {
-        int64_t packed_latlng = GeoPoint::pack_lat_lng(latlng.first, latlng.second);
-        S2LatLng s2LatLng;
-        GeoPoint::unpack_lat_lng(packed_latlng, s2LatLng);
-        ASSERT_FLOAT_EQ(latlng.first, s2LatLng.lat().degrees());
-        ASSERT_FLOAT_EQ(latlng.second, s2LatLng.lng().degrees());
-    }
+  for (auto& latlng : latlngs) {
+    int64_t packed_latlng = GeoPoint::pack_lat_lng(latlng.first, latlng.second);
+    S2LatLng s2LatLng;
+    GeoPoint::unpack_lat_lng(packed_latlng, s2LatLng);
+    ASSERT_FLOAT_EQ(latlng.first, s2LatLng.lat().degrees());
+    ASSERT_FLOAT_EQ(latlng.second, s2LatLng.lng().degrees());
+  }
 }

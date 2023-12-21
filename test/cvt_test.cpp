@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include <cvt.h>
+#include <gtest/gtest.h>
 
 /*
 TEST(CVTTest, TaggedPointers) {
@@ -27,7 +27,8 @@ TEST(CVTTest, TaggedPointers) {
     ASSERT_EQ(INTERNAL, trie.get_node_type(internal_tagged_ptr));
     ASSERT_EQ(100, trie.get_offset(internal_tagged_ptr));
 
-    uint8_t* internal_data = static_cast<uint8_t *>(trie.get_ptr(internal_tagged_ptr));
+    uint8_t* internal_data = static_cast<uint8_t
+*>(trie.get_ptr(internal_tagged_ptr));
 
     ASSERT_EQ(0, internal_data[0]);
     ASSERT_EQ(1, internal_data[1]);
@@ -39,7 +40,8 @@ TEST(CVTTest, TaggedPointers) {
     ASSERT_EQ(COMPRESSED, trie.get_node_type(compressed_tagged_ptr));
     ASSERT_EQ(100, trie.get_offset(compressed_tagged_ptr));
 
-    uint8_t* compressed_data = static_cast<uint8_t *>(trie.get_ptr(compressed_tagged_ptr));
+    uint8_t* compressed_data = static_cast<uint8_t
+*>(trie.get_ptr(compressed_tagged_ptr));
 
     ASSERT_EQ(0, compressed_data[0]);
     ASSERT_EQ(1, compressed_data[1]);
